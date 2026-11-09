@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>月度数据报告 · 2026年10月</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4f8; --card: #ffffff; --primary: #1a56db; --primary-light: #e8effd;
+      --green: #057a55; --green-light: #def7ec; --red: #e02424; --red-light: #fde8e8;
+      --yellow: #c27803; --yellow-light: #fdf6b2; --gray: #6b7280; --text: #111827;
+      --border: #e5e7eb; --shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04);
+    }
+    body { font-family: -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--text); font-size:14px; line-height:1.6; }
+    .header { background:linear-gradient(135deg,#1e3a8a 0%,#1a56db 60%,#3b82f6 100%); color:#fff; padding:36px 48px 32px; }
+    .header h1 { font-size:28px; font-weight:700; letter-spacing:.5px; }
+    .header .meta { margin-top:6px; opacity:.8; font-size:13px; }
+    .header .meta span { margin-right:24px; }
+    .container { max-width:1100px; margin:0 auto; padding:32px 24px 60px; }
+    .section { margin-bottom:40px; }
+    .section-title { font-size:18px; font-weight:700; margin-bottom:18px; padding-bottom:10px; border-bottom:2px solid var(--primary-light); display:flex; align-items:center; gap:8px; }
+    .section-title::before { content:''; display:inline-block; width:4px; height:18px; background:var(--primary); border-radius:2px; }
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+    .kpi-card { background:var(--card); border-radius:12px; padding:20px 22px; box-shadow:var(--shadow); }
+    .kpi-card .label { font-size:12px; color:var(--gray); font-weight:500; letter-spacing:.4px; }
+    .kpi-card .value { font-size:30px; font-weight:800; margin:6px 0 2px; }
+    .kpi-card .sub { font-size:12px; color:var(--gray); }
+    .kpi-card .compare { font-size:11px; margin-top:10px; padding-top:8px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .kpi-card .compare .prev { color:var(--gray); }
+    .kpi-card .compare .delta { font-weight:700; }
+    .delta-bad { color:var(--red); }
+    .delta-good { color:var(--green); }
+    .delta-neutral { color:var(--gray); }
+    .kpi-card.blue .value { color:var(--primary); }
+    .kpi-card.green .value { color:var(--green); }
+    .kpi-card.red .value { color:var(--red); }
+    .kpi-card.yellow .value { color:var(--yellow); }
+    .card { background:var(--card); border-radius:12px; padding:24px; box-shadow:var(--shadow); }
+    .card-title { font-size:13px; font-weight:700; color:var(--gray); margin-bottom:16px; text-transform:uppercase; letter-spacing:.5px; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .data-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .data-table th { background:#f8fafc; font-weight:600; color:var(--gray); padding:10px 14px; text-align:center; border-bottom:2px solid var(--border); white-space:nowrap; }
+    .data-table td { padding:10px 14px; text-align:center; border-bottom:1px solid var(--border); }
+    .data-table tr:last-child td { border-bottom:none; }
+    .row-label { text-align:left !important; font-weight:600; }
+    .highlight { font-weight:700; color:var(--primary); }
+    .good { color:var(--green); font-weight:600; }
+    .bad { color:var(--red); font-weight:600; }
+    .mid { color:var(--yellow); font-weight:600; }
+    .badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+    .badge.green { background:var(--green-light); color:var(--green); }
+    .badge.red { background:var(--red-light); color:var(--red); }
+    .badge.yellow { background:var(--yellow-light); color:var(--yellow); }
+    .badge.blue { background:var(--primary-light); color:var(--primary); }
+    .progress-wrap { margin-bottom:14px; }
+    .progress-label { display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px; }
+    .progress-bar { height:10px; background:#e5e7eb; border-radius:5px; overflow:hidden; }
+    .progress-fill { height:100%; border-radius:5px; }
+    .eff-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+    .eff-name { width:90px; font-weight:600; font-size:13px; }
+    .eff-bar-wrap { flex:1; }
+    .eff-value { width:55px; text-align:right; font-size:13px; font-weight:700; }
+    .chart-box { position:relative; height:240px; }
+    .age-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .age-table th { background:#f8fafc; padding:8px 14px; text-align:center; border-bottom:2px solid var(--border); font-size:12px; color:var(--gray); font-weight:600; }
+    .age-table td { padding:9px 14px; text-align:center; border-bottom:1px solid var(--border); }
+    .age-table tr:last-child td { font-weight:700; background:#f8fafc; }
+    .age-urgent { color:var(--red); font-weight:700; }
+    .impr-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .impr-card { background:#f8fafc; border-radius:10px; padding:16px; text-align:center; }
+    .impr-card .ch-name { font-size:12px; color:var(--gray); font-weight:600; margin-bottom:10px; }
+    .impr-card .times { display:flex; align-items:center; justify-content:center; gap:8px; }
+    .impr-card .old { font-size:18px; font-weight:700; color:#9ca3af; text-decoration:line-through; }
+    .impr-card .arrow { font-size:14px; color:var(--primary); }
+    .impr-card .new-val { font-size:18px; font-weight:700; color:var(--green); }
+    .recommend-box { background:var(--primary-light); border:1px solid #bfdbfe; border-radius:10px; padding:18px 20px; }
+    .recommend-box .r-title { font-size:14px; font-weight:800; color:var(--primary); margin-bottom:10px; }
+    .recommend-box .r-row { font-size:13px; line-height:1.8; margin-bottom:4px; }
+    .analysis-block { margin-top:20px; }
+    .analysis-item { border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:12px; }
+    .analysis-item:last-child { margin-bottom:0; }
+    .analysis-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+    .ch-tag { display:inline-block; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+    .ch-tag.af { background:#fee2e2; color:#991b1b; }
+    .ch-tag.tm { background:#fef3c7; color:#92400e; }
+    .analysis-target { font-size:12px; color:var(--gray); }
+    .analysis-body { font-size:13px; color:var(--text); line-height:1.7; }
+    .analysis-body .highlight-text { font-weight:700; color:var(--primary); }
+    .calc-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:16px; }
+    .calc-table th { background:var(--primary); color:#fff; padding:11px 16px; text-align:center; font-weight:600; }
+    .calc-table th:first-child { background:#374151; text-align:left; }
+    .calc-table td { padding:11px 16px; text-align:center; border-bottom:1px solid var(--border); }
+    .calc-table td:first-child { text-align:left; font-weight:600; color:var(--gray); background:#f9fafb; }
+    .calc-table tr:last-child td { border-bottom:none; font-weight:800; font-size:14px; }
+    .calc-table tr:last-child td:first-child { color:var(--text); }
+    .tip { position:relative; cursor:help; }
+    .tip .tip-text { display:none; position:absolute; z-index:20; bottom:130%; left:50%; transform:translateX(-50%); background:#1f2937; color:#fff; font-size:12px; font-weight:400; padding:7px 12px; border-radius:7px; white-space:nowrap; pointer-events:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+    .tip .tip-text::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:#1f2937; }
+    .tip:hover .tip-text { display:block; }
+    .placeholder { color:#9ca3af; font-style:italic; }
+    @media(max-width:768px){
+      .kpi-grid{grid-template-columns:1fr 1fr;}
+      .grid-2{grid-template-columns:1fr;}
+      .header{padding:24px 20px;}
+      .container{padding:20px 16px;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>象象银行审核月报（10月）</h1>
+  <div class="meta">
+    <span>统计周期：2026年10月1日 — 10月31日</span>
+    <span>团队规模：6人</span>
+    <span>生成时间：2026年11月</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="label">月总审核量</div>
+      <div class="value">5,085</div>
+      <div class="sub">AF 1,540 · TM 1,830 · Card 274 · Checker 1,441</div>
+      <div class="compare">
+        <span class="prev">上月：4,877</span>
+        <span class="delta delta-good">▲ 208 &nbsp;(+4.3%)</span>
+      </div>
+    </div>
+    <div class="kpi-card green">
+      <div class="label">综合日清率（10月）</div>
+      <div class="value">89%</div>
+      <div class="sub">AF 100% · TM 78%</div>
+      <div class="compare">
+        <span class="prev">上月：94%（AF 88% · TM 100%）</span>
+        <span class="delta delta-bad">▼ 5pp</span>
+      </div>
+    </div>
+    <div class="kpi-card green">
+      <div class="label">团队平均工时利用率</div>
+      <div class="value">118%</div>
+      <div class="sub">团队6人全员超额达标，整体持续高位运行</div>
+      <div class="compare">
+        <span class="prev">上月：117%</span>
+        <span class="delta delta-good">▲ 1pp</span>
+      </div>
+    </div>
+    <div class="kpi-card green">
+      <div class="label">待处理积压总量</div>
+      <div class="value">6,272</div>
+      <div class="sub">AF 待处理 340 · TM 待处理 5,932</div>
+      <div class="compare">
+        <span class="prev">上月：7,490</span>
+        <span class="delta delta-good">▼ 1,218 &nbsp;(-16.3%)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- S1 审核情况 -->
+  <div class="section">
+    <div class="section-title">审核情况</div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">各渠道周度新增 &amp; 审核量</div>
+      <table class="data-table">
+        <thead>
+          <tr><th>渠道</th><th>指标</th><th>10.1–10.7</th><th>10.8–10.14</th><th>10.15–10.21</th><th>10.22–10.31</th><th>月合计</th></tr>
+        </thead>
+        <tbody>
+          <tr style="background:#fafafa">
+            <td rowspan="2" class="row-label">ANTI-FRAUD</td>
+            <td style="color:var(--gray);font-size:12px">新增量</td>
+            <td>2</td><td>1</td><td>0</td><td>0</td><td class="highlight">3</td>
+          </tr>
+          <tr style="background:#fafafa">
+            <td style="color:var(--gray);font-size:12px">已审核</td>
+            <td class="good">92</td><td class="good">264</td><td class="good">827</td><td class="good">357</td><td class="highlight">1,540</td>
+          </tr>
+          <tr>
+            <td rowspan="2" class="row-label">TM ALERTS</td>
+            <td style="color:var(--gray);font-size:12px">新增量</td>
+            <td>568</td><td>644</td><td>554</td><td>568</td><td class="highlight">2,334</td>
+          </tr>
+          <tr>
+            <td style="color:var(--gray);font-size:12px">已审核</td>
+            <td class="mid">409</td><td class="mid">481</td><td class="mid">360</td><td class="mid">580</td><td class="highlight">1,830</td>
+          </tr>
+          <tr style="background:#faf5ff">
+            <td rowspan="2" class="row-label">CARD ALERTS</td>
+            <td style="color:var(--gray);font-size:12px">已分配</td>
+            <td style="color:#9ca3af">—</td><td style="color:#9ca3af">—</td><td style="color:#9ca3af">—</td><td style="color:#9ca3af">—</td><td class="highlight">274</td>
+          </tr>
+          <tr style="background:#faf5ff">
+            <td style="color:var(--gray);font-size:12px">已完成</td>
+            <td style="color:#9ca3af">—</td><td style="color:#9ca3af">—</td><td style="color:#9ca3af">—</td><td style="color:#9ca3af">—</td><td class="highlight">274</td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- Checker 审核情况 -->
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700;color:var(--gray);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">Checker 审核情况</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="border-radius:10px;overflow:hidden;border:1px solid #c7d2fe">
+            <div style="background:linear-gradient(135deg,#4f46e5,#6366f1);padding:8px 14px">
+              <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:.6px">TM CHECKER</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;background:#f5f3ff">
+              <div style="padding:12px 14px;text-align:center;border-right:1px solid #c7d2fe">
+                <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:4px">已审核</div>
+                <div style="font-size:24px;font-weight:800;color:#4f46e5">1,229</div>
+              </div>
+              <div style="padding:12px 14px;text-align:center">
+                <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:4px">待审核</div>
+                <div style="font-size:24px;font-weight:800;color:var(--yellow)">1,953</div>
+              </div>
+            </div>
+          </div>
+          <div style="border-radius:10px;overflow:hidden;border:1px solid #bfdbfe">
+            <div style="background:linear-gradient(135deg,#1a56db,#3b82f6);padding:8px 14px">
+              <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:.6px">ANTI-FRAUD CHECKER</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;background:#eff6ff">
+              <div style="padding:12px 14px;text-align:center;border-right:1px solid #bfdbfe">
+                <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:4px">已审核</div>
+                <div style="font-size:24px;font-weight:800;color:#4f46e5">212</div>
+              </div>
+              <div style="padding:12px 14px;text-align:center">
+                <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:4px">待审核</div>
+                <div style="font-size:24px;font-weight:800;color:var(--yellow)">1,142</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 走势图 -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">各渠道新增量 &amp; 审核量走势</div>
+      <div class="chart-box" style="height:320px"><canvas id="c1"></canvas></div>
+    </div>
+    <!-- TM 历史新增趋势 -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">TM Alerts 新增量周度走势及月度降幅对比（8月–10月）</div>
+      <div class="chart-box" style="height:280px"><canvas id="c8"></canvas></div>
+    </div>
+    <!-- AF 历史新增趋势 -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">Anti-Fraud 新增量周度走势及月度降幅对比（7月–10月）</div>
+      <div class="chart-box" style="height:280px"><canvas id="c7"></canvas></div>
+    </div>
+
+  <!-- S2 日清率 -->
+  <div class="section">
+    <div class="section-title">日清率分析</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">T日审核完成率</div>
+        <div class="chart-box" style="height:270px"><canvas id="c3"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">月度日清率对比（7月–10月）</div>
+        <table class="data-table" style="margin-bottom:16px">
+          <thead><tr><th>渠道</th><th>7月</th><th>8月</th><th>9月</th><th>10月</th><th>趋势</th></tr></thead>
+          <tbody>
+            <tr><td class="row-label">Anti-Fraud</td><td><span class="badge green">83%</span></td><td><span class="badge green">95%</span></td><td><span class="badge yellow">88%</span></td><td><span class="badge green">100%</span></td><td>全月达标</td></tr>
+            <tr><td class="row-label">TM Alerts</td><td><span class="badge green">73%</span></td><td><span class="badge yellow">67%</span></td><td><span class="badge green">100%</span></td><td><span class="badge yellow">78%</span></td><td>阶段性回落</td></tr>
+          </tbody>
+        </table>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:8px">10月达标进度</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Anti-Fraud</span><span style="color:var(--green);font-weight:700">100%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>TM Alerts</span><span style="color:var(--yellow);font-weight:700">78%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:78%;background:var(--yellow)"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="analysis-block">
+      <div class="analysis-item">
+        <div class="analysis-header">
+          <span class="ch-tag af">Anti-Fraud</span>
+          <span class="analysis-target">目标：确保所有指派的任务在T日内完成</span>
+        </div>
+        <div class="analysis-body">
+          本期（10.1–10.31）Anti-Fraud T日完成率呈<span class="highlight-text">「全月四周全部100%达标」</span>的走势。四周完成率均为100%，整体运行稳定。<br><br><span class="highlight-text">达标原因：</span>AF已与TM合并，当月Anti-Fraud无明显新增，完成率达标。<br><br>整体完成率100%，较9月（88%）<span class="highlight-text">提升 12pp</span>，实现全月达标。
+        </div>
+      </div>
+      <div class="analysis-item">
+        <div class="analysis-header">
+          <span class="ch-tag tm">TM Alerts</span>
+          <span class="analysis-target">目标：确保所有指派的任务在T日内完成</span>
+        </div>
+        <div class="analysis-body">
+          本期（10.1–10.31）TM Alerts T日完成率整体呈<span class="highlight-text">「前三周回落、末周恢复达标」</span>的走势。第一周（10.1–10.7）72.01%、第二周（10.8–10.14）74.69%、第三周（10.15–10.21）回落至64.98%；第四周（10.22–10.31）恢复至100%。<br><br><span class="highlight-text">回落原因：</span>10月因Anti-Fraud与TM任务合并，TM任务小幅上升：TM 新增量（2,334单）较9月（2,122单）<span class="highlight-text">上升约10%</span>。前两周因内地国庆假期导致完成率下降；第三周完成率下降至64.98%原因：当周TM AI报告异常，生成速度慢，所以调配人力处理Anti-Fraud；第四周TM AI报告恢复正常后，人力重新聚焦新增，完成率恢复100%。<br><br>整体完成率78%（已审核1,830 / 新增2,334），较9月（100%）<span class="highlight-text">下降 22pp</span>，未实现全月达标。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3 人效 -->
+  <div class="section">
+    <div class="section-title">人员及人效情况</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">10月工时利用率<span style="font-size:11px;font-weight:400;color:var(--gray);margin-left:8px;letter-spacing:0">（目标：工时利用率≥90%）</span></div>
+        <div style="margin-top:8px">
+          <div class="eff-row">
+            <div class="eff-name">bellazou</div>
+            <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:100%;background:var(--primary)"></div></div></div>
+            <div class="eff-value" style="color:var(--primary)">145%</div>
+          </div>
+          <div class="eff-row">
+            <div class="eff-name">jundecai <span class="tip" style="font-size:13px;color:var(--primary);font-weight:700">ⓘ<span class="tip-text">TM/AF checker</span></span></div>
+            <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:96%;background:var(--primary)"></div></div></div>
+            <div class="eff-value" style="color:var(--primary)">125%</div>
+          </div>
+          <div class="eff-row">
+            <div class="eff-name">onewan</div>
+            <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:87%;background:#60a5fa"></div></div></div>
+            <div class="eff-value" style="color:var(--primary)">113%</div>
+          </div>
+          <div class="eff-row">
+            <div class="eff-name">mandychen</div>
+            <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:85%;background:#60a5fa"></div></div></div>
+            <div class="eff-value" style="color:var(--primary)">110%</div>
+          </div>
+          <div class="eff-row">
+            <div class="eff-name">juniorzhu</div>
+            <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:84%;background:#93c5fd"></div></div></div>
+            <div class="eff-value" style="color:var(--primary)">109%</div>
+          </div>
+          <div class="eff-row">
+            <div class="eff-name">grantlin</div>
+            <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:80%;background:#bfdbfe"></div></div></div>
+            <div class="eff-value" style="color:var(--gray)">104%</div>
+          </div>
+          <div style="border-top:2px solid var(--border);margin:14px 0 10px"></div>
+          <div class="eff-row">
+            <div class="eff-name" style="font-weight:800">团队平均</div>
+            <div class="eff-bar-wrap"><div class="progress-bar" style="height:14px"><div class="progress-fill" style="width:91%;background:linear-gradient(90deg,var(--primary),#60a5fa)"></div></div></div>
+            <div class="eff-value" style="color:var(--primary);font-size:15px;font-weight:800">118%</div>
+          </div>
+          <div style="margin-top:10px;padding:8px 12px;background:#f8fafc;border-radius:8px;font-size:12px;color:var(--gray);line-height:1.8">
+            TM/AF checker <strong style="color:var(--text)">1人</strong>　·　TM/AF marker <strong style="color:var(--text)">4人</strong>　·　Card <strong style="color:var(--text)">1人</strong>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">各渠道处理时效</div>
+        <div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <!-- Anti-Fraud -->
+          <div style="border-radius:8px;overflow:hidden;border:1px solid #bfdbfe">
+            <div style="background:var(--primary);padding:5px 10px">
+              <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.6px">ANTI-FRAUD</span>
+            </div>
+            <div style="padding:8px 10px;background:#f8fafc;text-align:center">
+              <div style="display:flex;align-items:baseline;justify-content:center;gap:4px">
+                <span style="font-size:20px;font-weight:900;color:var(--primary);line-height:1.1">8</span>
+                <span style="font-size:11px;color:var(--gray);font-weight:600">min/单</span>
+              </div>
+              <div style="margin-top:6px;padding-top:5px;border-top:1px solid var(--border);font-size:11px;color:var(--gray)">
+                单人上限 <span style="font-weight:700;color:var(--primary)">60 单</span>/日
+              </div>
+            </div>
+          </div>
+          <!-- TM Alerts -->
+          <div style="border-radius:8px;overflow:hidden;border:1px solid #c7d2fe">
+            <div style="background:linear-gradient(135deg,#4f46e5 0%,#6366f1 100%);padding:5px 10px">
+              <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.6px">TM ALERTS</span>
+            </div>
+            <div style="padding:8px 10px;background:#f5f3ff;text-align:center">
+              <div style="display:flex;align-items:baseline;justify-content:center;gap:4px">
+                <span style="font-size:20px;font-weight:900;color:#4f46e5;line-height:1.1">20.5</span>
+                <span style="font-size:11px;color:var(--gray);font-weight:600">min/单</span>
+              </div>
+              <div style="margin-top:6px;padding-top:5px;border-top:1px solid #c7d2fe;font-size:11px;color:var(--gray)">
+                单人上限 <span style="font-weight:700;color:#4f46e5">24 单</span>/日
+              </div>
+            </div>
+          </div>
+          <!-- Card Alerts -->
+          <div style="border-radius:8px;overflow:hidden;border:1px solid #ddd6fe">
+            <div style="background:#7c3aed;padding:5px 10px">
+              <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.6px">CARD ALERTS</span>
+            </div>
+            <div style="padding:8px 10px;background:#faf5ff;text-align:center">
+              <div style="display:flex;align-items:baseline;justify-content:center;gap:5px">
+                <span style="font-size:14px;font-weight:700;color:#9ca3af;text-decoration:line-through">25</span>
+                <span style="font-size:12px;color:var(--green);font-weight:700">→</span>
+                <span style="font-size:17px;font-weight:900;color:#7c3aed;line-height:1.1">21.5</span>
+                <span style="font-size:11px;color:var(--gray);font-weight:600">min/单</span>
+              </div>
+              <div style="margin-top:6px;padding-top:5px;border-top:1px solid #ddd6fe;font-size:11px;color:var(--gray)">
+                单人上限 <span style="font-weight:700;color:#7c3aed">20 单</span>/日
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:6px;letter-spacing:.4px">Checker 渠道时效</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="border-radius:8px;overflow:hidden;border:1px solid #c7d2fe">
+              <div style="background:linear-gradient(135deg,#4f46e5,#6366f1);padding:4px 10px">
+                <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.6px">TM CHECKER</span>
+              </div>
+              <div style="padding:6px 10px;background:#f5f3ff;text-align:center">
+                <div style="display:flex;align-items:baseline;justify-content:center;gap:5px">
+                  <span style="font-size:14px;font-weight:700;color:#9ca3af;text-decoration:line-through">11</span>
+                  <span style="font-size:12px;color:var(--green);font-weight:700">→</span>
+                  <span style="font-size:17px;font-weight:900;color:#4f46e5;line-height:1.1">8</span>
+                  <span style="font-size:11px;color:var(--gray);font-weight:600">min/单</span>
+                </div>
+                <div style="margin-top:5px;padding-top:4px;border-top:1px solid #c7d2fe;font-size:11px;color:var(--gray)">
+                  单人上限 <span style="font-weight:700;color:#4f46e5">60 单</span>/日
+                </div>
+              </div>
+            </div>
+            <div style="border-radius:8px;overflow:hidden;border:1px solid #bfdbfe">
+              <div style="background:var(--primary);padding:4px 10px">
+                <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.6px">AF CHECKER</span>
+              </div>
+              <div style="padding:6px 10px;background:#eff6ff;text-align:center">
+                <div style="display:flex;align-items:baseline;justify-content:center;gap:5px">
+                  <span style="font-size:14px;font-weight:700;color:#9ca3af;text-decoration:line-through">4.5</span>
+                  <span style="font-size:12px;color:var(--green);font-weight:700">→</span>
+                  <span style="font-size:17px;font-weight:900;color:var(--primary);line-height:1.1">4</span>
+                  <span style="font-size:11px;color:var(--gray);font-weight:600">min/单</span>
+                </div>
+                <div style="margin-top:5px;padding-top:4px;border-top:1px solid #bfdbfe;font-size:11px;color:var(--gray)">
+                  单人上限 <span style="font-weight:700;color:var(--primary)">120 单</span>/日
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:7px;letter-spacing:.4px">本月差错记录</div>
+          <table class="data-table" style="font-size:11px">
+            <thead>
+              <tr><th style="padding:6px 10px">成员</th><th style="padding:6px 10px">差错类型</th><th style="padding:6px 10px">数量</th><th style="text-align:left;padding:6px 10px">问题描述</th></tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="4" style="padding:14px;color:var(--green);font-weight:700">无</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <div class="card-title">近一个月成员各渠道日均处理单数</div>
+      <div style="margin-top:12px">
+        <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:12px;letter-spacing:.4px">ANTI-FRAUD &nbsp;<span style="font-weight:400;color:#9ca3af">（单人上限 60 单/日）</span></div>
+        <div class="eff-row">
+          <div class="eff-name">bellazou</div>
+          <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:100%;background:var(--primary)"></div></div></div>
+          <div class="eff-value" style="color:var(--primary)">61 单</div>
+        </div>
+        <div style="border-top:2px solid var(--border);margin:16px 0 14px"></div>
+        <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:12px;letter-spacing:.4px">TM ALERTS &nbsp;<span style="font-weight:400;color:#9ca3af">（单人上限 24 单/日）</span></div>
+        <div class="eff-row">
+          <div class="eff-name">mandychen</div>
+          <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:100%;background:#fcd34d"></div></div></div>
+          <div class="eff-value" style="color:var(--yellow)">25 单</div>
+        </div>
+        <div class="eff-row">
+          <div class="eff-name">juniorzhu</div>
+          <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:100%;background:#fcd34d"></div></div></div>
+          <div class="eff-value" style="color:var(--yellow)">25 单</div>
+        </div>
+        <div class="eff-row">
+          <div class="eff-name">onewan</div>
+          <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:100%;background:#fcd34d"></div></div></div>
+          <div class="eff-value" style="color:var(--yellow)">24 单</div>
+        </div>
+        <div class="eff-row">
+          <div class="eff-name">grantlin</div>
+          <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:100%;background:#fcd34d"></div></div></div>
+          <div class="eff-value" style="color:var(--gray)">24 单</div>
+        </div>
+        <div style="border-top:2px solid var(--border);margin:16px 0 14px"></div>
+        <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:12px;letter-spacing:.4px">CARD ALERTS</div>
+        <div class="eff-row">
+          <div class="eff-name">bellazou</div>
+          <div class="eff-bar-wrap"><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:100%;background:#a78bfa"></div></div></div>
+          <div class="eff-value" style="color:#7c3aed">20 单</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4 积压 -->
+  <div class="section">
+    <div class="section-title">积压情况</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Anti-Fraud 存量积压分布（合计 340 单）</div>
+        <table class="age-table" style="margin-bottom:14px">
+          <thead><tr><th>积压天数</th><th>任务量</th><th>占比</th><th>风险</th></tr></thead>
+          <tbody>
+            <tr><td>&gt;70天</td><td>0 单</td><td>0%</td><td><span class="badge blue">无</span></td></tr>
+            <tr><td>60–69天</td><td>5 单</td><td>1.5%</td><td><span class="badge blue">观察</span></td></tr>
+            <tr><td>50–59天</td><td>219 单</td><td>64.4%</td><td><span class="badge yellow">关注</span></td></tr>
+            <tr><td>40–49天</td><td>99 单</td><td>29.1%</td><td><span class="badge yellow">关注</span></td></tr>
+            <tr><td>0–39天</td><td>17 单</td><td>5.0%</td><td><span class="badge blue">观察</span></td></tr>
+            <tr><td>合计</td><td>340 单</td><td>100%</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <div class="chart-box" style="height:160px"><canvas id="c4"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">TM Alerts 存量积压分布（合计 5,932 单）</div>
+        <table class="age-table" style="margin-bottom:14px">
+          <thead><tr><th>积压天数</th><th>任务量</th><th>占比</th><th>风险</th></tr></thead>
+          <tbody>
+            <tr><td class="age-urgent">&gt;70天</td><td class="age-urgent">653 单</td><td>11.0%</td><td><span class="badge red">高风险</span></td></tr>
+            <tr><td class="age-urgent">60–69天</td><td class="age-urgent">528 单</td><td>8.9%</td><td><span class="badge red">高风险</span></td></tr>
+            <tr><td>50–59天</td><td>542 单</td><td>9.1%</td><td><span class="badge yellow">关注</span></td></tr>
+            <tr><td>40–49天</td><td>1,050 单</td><td>17.7%</td><td><span class="badge yellow">关注</span></td></tr>
+            <tr><td>0–39天</td><td>3,159 单</td><td>53.3%</td><td><span class="badge blue">观察</span></td></tr>
+            <tr><td>合计</td><td>5,932 单</td><td>100%</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <div class="chart-box" style="height:160px"><canvas id="c5"></canvas></div>
+      </div>
+    </div>
+    <!-- 10月积压总结 -->
+    <div class="recommend-box" style="margin-top:20px">
+      <div class="r-title">整体概览</div>
+      <div class="r-row">本月待处理积压总量 <strong>6,272 单</strong>（AF 340 · TM 5,932），较上月（7,490 单）<strong style="color:var(--green)">下降 1,218 单（-16.3%）</strong>，整体积压压力持续缓解。</div>
+      <div class="r-title" style="margin-top:14px">Anti-Fraud 积压结构</div>
+      <div class="r-row">AF 积压合计 340 单，<strong>无 70 天以上积压</strong>，60–69 天仅 5 单（1.5%），积压集中在 40–59 天（93.5%），结构较上月大幅优化（9月合计2,075单 → 10月340单，<strong style="color:var(--green)">下降83.6%</strong>），风险可控。</div>
+      <div class="r-title" style="margin-top:14px">TM Alerts 积压结构</div>
+      <div class="r-row">TM 积压合计 5,932 单，其中 <strong style="color:var(--red)">70 天以上 653 单（11.0%）</strong>、60–69 天 528 单（8.9%）为高风险积压，合计1,181单需持续关注；0–39 天 3,159 单（53.3%）占主体，新增积压消化正常。</div>
+      <div class="r-title" style="margin-top:14px">下月重点</div>
+      <div class="r-row">① 优先清理 TM 60 天以上高风险积压（1,181 单）；② 维持 AF 低积压水平（340 单）；③ 提升 TM T日完成率（本月78%，未达标），保障新增积压 T 日清零。</div>
+    </div>
+  </div>
+
+
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+const W=['10.1-10.7','10.8-10.14','10.15-10.21','10.22-10.31'];
+
+// 填入10月各周数据：[AF新增, AF已审核, TM新增, TM已审核]
+const AF_NEW=[2,1,0,0];
+const AF_DONE=[92,264,827,357];
+const TM_NEW=[568,644,554,568];
+const TM_DONE=[409,481,360,580];
+
+new Chart(document.getElementById('c1'),{
+  type:'line',
+  data:{labels:W,datasets:[
+    {label:'Anti-Fraud 新增',data:AF_NEW,borderColor:'#86efac',backgroundColor:'transparent',borderDash:[5,3],tension:.4,pointRadius:4,yAxisID:'y',datalabels:{color:'#22c55e',align:'top',anchor:'end',font:{size:9,weight:'600'}}},
+    {label:'Anti-Fraud 已审核',data:AF_DONE,borderColor:'#16a34a',backgroundColor:'transparent',tension:.4,pointRadius:4,yAxisID:'y',datalabels:{color:'#16a34a',align:'bottom',anchor:'start',font:{size:9,weight:'600'}}},
+    {label:'TM Alerts 新增',data:TM_NEW,borderColor:'#fcd34d',backgroundColor:'transparent',borderDash:[5,3],tension:.4,pointRadius:4,yAxisID:'y',datalabels:{color:'#d97706',align:'top',anchor:'end',font:{size:9,weight:'600'}}},
+    {label:'TM Alerts 已审核',data:TM_DONE,borderColor:'#d97706',backgroundColor:'transparent',tension:.4,pointRadius:4,yAxisID:'y',datalabels:{color:'#92400e',align:'bottom',anchor:'start',font:{size:9,weight:'600'}}}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:14,font:{size:11}}},datalabels:{formatter:v=>v}},
+    scales:{x:{ticks:{font:{size:11}},grid:{display:false}},y:{position:'left',ticks:{font:{size:11}},grid:{color:'#f3f4f6'},title:{display:true,text:'Anti-Fraud / TM Alerts',font:{size:11}}}}}
+});
+
+// AF 历史新增趋势（7-10月）—— 9月数据已填，10月待补
+const monthBgPlugin={
+  id:'monthBg',
+  beforeDraw(chart){
+    const {ctx,chartArea:{top,bottom},scales:{x}}=chart;
+    const gap=(x.getPixelForValue(1)-x.getPixelForValue(0))/2;
+    const regions=[
+      {label:'7月',total:'2,802 单',pct:'',start:0,end:3,bg:'rgba(254,243,199,.35)',tc:'#92400e'},
+      {label:'8月',total:'1,908 单',pct:'▼31.9%',start:4,end:7,bg:'rgba(220,252,231,.35)',tc:'#065f46'},
+      {label:'9月',total:'910 单',pct:'▼52.3%',start:8,end:11,bg:'rgba(243,244,246,.35)',tc:'#374151'},
+      {label:'10月',total:'3 单',pct:'▼99.7%',start:12,end:15,bg:'rgba(219,234,254,.35)',tc:'#1e40af'},
+    ];
+    regions.forEach(({label,total,pct,start,end,bg,tc})=>{
+      const x1=x.getPixelForValue(start)-gap;
+      const x2=x.getPixelForValue(end)+gap;
+      ctx.fillStyle=bg;
+      ctx.fillRect(x1,top,x2-x1,bottom-top);
+      ctx.fillStyle=tc;
+      ctx.font='700 12px -apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText(label,(x1+x2)/2,top-16);
+      if(total){
+        const cx=(x1+x2)/2;
+        ctx.font='10px -apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
+        const tw=ctx.measureText(total).width;
+        const pw=pct?ctx.measureText(' '+pct).width:0;
+        const startX=cx-(tw+pw)/2;
+        ctx.fillStyle=tc;
+        ctx.textAlign='left';
+        ctx.fillText(total,startX,top-4);
+        if(pct){
+          ctx.fillStyle='#16a34a';
+          ctx.fillText(' '+pct,startX+tw,top-4);
+        }
+        ctx.textAlign='center';
+      }
+      if(start>0){
+        ctx.strokeStyle='rgba(156,163,175,.7)';
+        ctx.lineWidth=1;
+        ctx.setLineDash([4,3]);
+        ctx.beginPath();
+        ctx.moveTo(x1,top);
+        ctx.lineTo(x1,bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+  }
+};
+
+new Chart(document.getElementById('c7'),{
+  type:'line',
+  data:{
+    labels:['7.1-7.7','7.8-7.14','7.15-7.21','7.22-7.31','8.1-8.7','8.8-8.14','8.15-8.21','8.22-8.31','9.1-9.7','9.8-9.14','9.15-9.21','9.22-9.30','10.1-10.7','10.8-10.14','10.15-10.21','10.22-10.31'],
+    datasets:[{
+      label:'AF 新增量',
+      // 前12个为7-9月历史数据，后4个为10月数据
+      data:[579,434,428,1361,472,472,496,468,416,220,214,60,2,1,0,0],
+      borderColor:'#1a56db',
+      backgroundColor:'rgba(26,86,219,.08)',
+      fill:true,
+      tension:.4,
+      pointRadius:4,
+      pointHoverRadius:6,
+      borderWidth:2,
+      datalabels:{color:'#1a56db',align:'top',anchor:'end',offset:4,font:{size:9,weight:'600'},formatter:v=>v}
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    layout:{padding:{top:38,bottom:4}},
+    plugins:{legend:{display:false},datalabels:{display:true}},
+    scales:{
+      x:{ticks:{font:{size:10},maxRotation:45,minRotation:30},grid:{display:false}},
+      y:{min:0,ticks:{font:{size:11}},grid:{color:'#f3f4f6'},title:{display:true,text:'新增量（单）',font:{size:11}}}
+    }
+  },
+  plugins:[monthBgPlugin]
+});
+
+// TM 历史新增趋势（8-10月）
+const monthBgPluginTM={
+  id:'monthBgTM',
+  beforeDraw(chart){
+    const {ctx,chartArea:{top,bottom},scales:{x}}=chart;
+    const gap=(x.getPixelForValue(1)-x.getPixelForValue(0))/2;
+    const regions=[
+      {label:'8月',total:'2,313 单',pct:'',start:0,end:3,bg:'rgba(220,252,231,.35)',tc:'#065f46'},
+      {label:'9月',total:'2,122 单',pct:'▼8.3%',start:4,end:7,bg:'rgba(243,244,246,.35)',tc:'#374151'},
+      {label:'10月',total:'2,334 单',pct:'▲10.1%',start:8,end:11,bg:'rgba(219,234,254,.35)',tc:'#1e40af'},
+    ];
+    regions.forEach(({label,total,pct,start,end,bg,tc})=>{
+      const x1=x.getPixelForValue(start)-gap;
+      const x2=x.getPixelForValue(end)+gap;
+      ctx.fillStyle=bg;
+      ctx.fillRect(x1,top,x2-x1,bottom-top);
+      ctx.fillStyle=tc;
+      ctx.font='700 12px -apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText(label,(x1+x2)/2,top-16);
+      if(total){
+        const cx=(x1+x2)/2;
+        ctx.font='10px -apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
+        const tw=ctx.measureText(total).width;
+        const pw=pct?ctx.measureText(' '+pct).width:0;
+        const startX=cx-(tw+pw)/2;
+        ctx.fillStyle=tc;
+        ctx.textAlign='left';
+        ctx.fillText(total,startX,top-4);
+        if(pct){
+          ctx.fillStyle=pct.indexOf('▼')>=0?'#16a34a':'#dc2626';
+          ctx.fillText(' '+pct,startX+tw,top-4);
+        }
+        ctx.textAlign='center';
+      }
+      if(start>0){
+        ctx.strokeStyle='rgba(156,163,175,.7)';
+        ctx.lineWidth=1;
+        ctx.setLineDash([4,3]);
+        ctx.beginPath();
+        ctx.moveTo(x1,top);
+        ctx.lineTo(x1,bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+  }
+};
+
+new Chart(document.getElementById('c8'),{
+  type:'line',
+  data:{
+    labels:['8.1-8.7','8.8-8.14','8.15-8.21','8.22-8.31','9.1-9.7','9.8-9.14','9.15-9.21','9.22-9.30','10.1-10.7','10.8-10.14','10.15-10.21','10.22-10.31'],
+    datasets:[{
+      label:'TM 新增量',
+      // 8月、9月历史数据 + 10月数据
+      data:[502,440,424,947,521,480,495,626,568,644,554,568],
+      borderColor:'#d97706',
+      backgroundColor:'rgba(217,119,6,.08)',
+      fill:true,
+      tension:.4,
+      pointRadius:4,
+      pointHoverRadius:6,
+      borderWidth:2,
+      datalabels:{color:'#92400e',align:'top',anchor:'end',offset:4,font:{size:9,weight:'600'},formatter:v=>v}
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    layout:{padding:{top:38,bottom:4}},
+    plugins:{legend:{display:false},datalabels:{display:true}},
+    scales:{
+      x:{ticks:{font:{size:10},maxRotation:45,minRotation:30},grid:{display:false}},
+      y:{min:0,ticks:{font:{size:11}},grid:{color:'#f3f4f6'},title:{display:true,text:'新增量（单）',font:{size:11}}}
+    }
+  },
+  plugins:[monthBgPluginTM]
+});
+
+// T日审核完成率 —— 10月各周
+new Chart(document.getElementById('c3'),{
+  type:'line',
+  data:{labels:W,datasets:[
+    {label:'Anti-Fraud',data:[100,100,100,100],borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.08)',cubicInterpolationMode:'monotone',fill:true,pointRadius:5,pointHoverRadius:7,borderWidth:2,datalabels:{color:'#16a34a',align:'top',anchor:'end',offset:14,font:{size:10,weight:'700'},formatter:v=>v+'%'}},
+    {label:'TM Alerts',data:[72.01,74.69,64.98,100],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.08)',cubicInterpolationMode:'monotone',fill:true,pointRadius:5,pointHoverRadius:7,borderWidth:2,datalabels:{color:'#92400e',align:'top',anchor:'end',offset:14,font:{size:10,weight:'700'},formatter:v=>v+'%'}}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    layout:{padding:{top:20,bottom:8}},
+    plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},datalabels:{display:true}},
+    scales:{x:{ticks:{font:{size:11}},grid:{display:false}},y:{min:0,max:100,ticks:{stepSize:20,callback:v=>v+'%',font:{size:11}},grid:{color:'#f3f4f6'}}}}
+});
+
+// AF 积压分布 —— 10月
+new Chart(document.getElementById('c4'),{
+  type:'bar',
+  data:{labels:['>70天','60-69天','50-59天','40-49天','0-39天'],datasets:[{data:[0,5,219,99,17],backgroundColor:['#ef4444','#f97316','#fbbf24','#a3e635','#60a5fa'],borderRadius:4}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},datalabels:{color:'#374151',anchor:'end',align:'end',font:{size:11,weight:'600'},formatter:v=>v+'单'}},
+    scales:{x:{ticks:{font:{size:11}},grid:{color:'#f3f4f6'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}
+});
+
+// TM 积压分布 —— 10月
+new Chart(document.getElementById('c5'),{
+  type:'bar',
+  data:{labels:['>70天','60-69天','50-59天','40-49天','0-39天'],datasets:[{data:[653,528,542,1050,3159],backgroundColor:['#ef4444','#f97316','#fbbf24','#a3e635','#60a5fa'],borderRadius:4}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},datalabels:{color:'#374151',anchor:'end',align:'end',font:{size:11,weight:'600'},formatter:v=>v+'单'}},
+    scales:{x:{ticks:{font:{size:11}},grid:{color:'#f3f4f6'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}
+});
+</script>
+
+</body>
+</html>
