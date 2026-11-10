@@ -500,7 +500,7 @@
     <div class="section-title">积压情况</div>
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">Anti-Fraud 存量积压分布（合计 340 单）</div>
+        <div class="card-title">Anti-Fraud Maker 存量积压分布（合计 340 单）</div>
         <table class="age-table" style="margin-bottom:14px">
           <thead><tr><th>积压天数</th><th>任务量</th><th>占比</th><th>风险</th></tr></thead>
           <tbody>
@@ -515,7 +515,7 @@
         <div class="chart-box" style="height:160px"><canvas id="c4"></canvas></div>
       </div>
       <div class="card">
-        <div class="card-title">TM Alerts 存量积压分布（合计 5,932 单）</div>
+        <div class="card-title">TM Alerts Maker 存量积压分布（合计 5,932 单）</div>
         <table class="age-table" style="margin-bottom:14px">
           <thead><tr><th>积压天数</th><th>任务量</th><th>占比</th><th>风险</th></tr></thead>
           <tbody>
@@ -528,6 +528,39 @@
           </tbody>
         </table>
         <div class="chart-box" style="height:160px"><canvas id="c5"></canvas></div>
+      </div>
+    </div>
+    <!-- Checker 积压分布 -->
+    <div class="grid-2" style="margin-top:20px">
+      <div class="card">
+        <div class="card-title">Anti-Fraud Checker 待审核积压分布（合计 1,142 单）</div>
+        <table class="age-table" style="margin-bottom:14px">
+          <thead><tr><th>积压天数</th><th>任务量</th><th>占比</th><th>风险</th></tr></thead>
+          <tbody>
+            <tr><td class="age-urgent">&gt;90天</td><td class="age-urgent">118 单</td><td>10.3%</td><td><span class="badge red">高风险</span></td></tr>
+            <tr><td class="age-urgent">80–89天</td><td class="age-urgent">426 单</td><td>37.3%</td><td><span class="badge red">高风险</span></td></tr>
+            <tr><td>70–79天</td><td>344 单</td><td>30.1%</td><td><span class="badge yellow">关注</span></td></tr>
+            <tr><td>60–69天</td><td>254 单</td><td>22.2%</td><td><span class="badge yellow">关注</span></td></tr>
+            <tr><td>0–60天</td><td>0 单</td><td>0%</td><td><span class="badge blue">无</span></td></tr>
+            <tr><td>合计</td><td>1,142 单</td><td>100%</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <div class="chart-box" style="height:160px"><canvas id="c6"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">TM Alerts Checker 待审核积压分布（合计 1,953 单）</div>
+        <table class="age-table" style="margin-bottom:14px">
+          <thead><tr><th>积压天数</th><th>任务量</th><th>占比</th><th>风险</th></tr></thead>
+          <tbody>
+            <tr><td class="age-urgent">&gt;120天</td><td class="age-urgent">132 单</td><td>6.8%</td><td><span class="badge red">高风险</span></td></tr>
+            <tr><td class="age-urgent">110–119天</td><td class="age-urgent">556 单</td><td>28.5%</td><td><span class="badge red">高风险</span></td></tr>
+            <tr><td>100–109天</td><td>266 单</td><td>13.6%</td><td><span class="badge yellow">关注</span></td></tr>
+            <tr><td>90–99天</td><td>576 单</td><td>29.5%</td><td><span class="badge yellow">关注</span></td></tr>
+            <tr><td>0–89天</td><td>423 单</td><td>21.7%</td><td><span class="badge blue">观察</span></td></tr>
+            <tr><td>合计</td><td>1,953 单</td><td>100%</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <div class="chart-box" style="height:160px"><canvas id="c9"></canvas></div>
       </div>
     </div>
     <!-- 10月积压总结 -->
@@ -754,6 +787,24 @@ new Chart(document.getElementById('c4'),{
 new Chart(document.getElementById('c5'),{
   type:'bar',
   data:{labels:['>70天','60-69天','50-59天','40-49天','0-39天'],datasets:[{data:[653,528,542,1050,3159],backgroundColor:['#ef4444','#f97316','#fbbf24','#a3e635','#60a5fa'],borderRadius:4}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},datalabels:{color:'#374151',anchor:'end',align:'end',font:{size:11,weight:'600'},formatter:v=>v+'单'}},
+    scales:{x:{ticks:{font:{size:11}},grid:{color:'#f3f4f6'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}
+});
+
+// AF Checker 积压分布 —— 10月
+new Chart(document.getElementById('c6'),{
+  type:'bar',
+  data:{labels:['>90天','80-89天','70-79天','60-69天','0-60天'],datasets:[{data:[118,426,344,254,0],backgroundColor:['#ef4444','#f97316','#fbbf24','#a3e635','#60a5fa'],borderRadius:4}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},datalabels:{color:'#374151',anchor:'end',align:'end',font:{size:11,weight:'600'},formatter:v=>v+'单'}},
+    scales:{x:{ticks:{font:{size:11}},grid:{color:'#f3f4f6'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}
+});
+
+// TM Checker 积压分布 —— 10月
+new Chart(document.getElementById('c9'),{
+  type:'bar',
+  data:{labels:['>120天','110-119天','100-109天','90-99天','0-89天'],datasets:[{data:[132,556,266,576,423],backgroundColor:['#ef4444','#f97316','#fbbf24','#a3e635','#60a5fa'],borderRadius:4}]},
   options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},datalabels:{color:'#374151',anchor:'end',align:'end',font:{size:11,weight:'600'},formatter:v=>v+'单'}},
     scales:{x:{ticks:{font:{size:11}},grid:{color:'#f3f4f6'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}
